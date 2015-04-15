@@ -1,0 +1,61 @@
+#Heather Geiger
+#New York Genome Center
+#04-15-2015
+
+All files are also in /data/NYGC/Resources/RNASeqPipelineResources/scripts.
+
+First, here is the basic pipeline, in case we need to run basic alignment and QC for something outside of East River:
+
+pipeline_2015.sh
+
+Or
+
+https://github.com/nygenome/pipelines/edit/master/rnaseq/pipeline_2015.sh
+
+Second, here is the PDX pipeline. This and the other scripts I am going to list will be found here: https://github.com/hmgeiger/RNASeq_reports_scripts
+
+PDX_pipeline_updated.sh
+
+For the PDX pipeline, rRNA alignment should be run in parallel with alignment to the combined human/mouse index. That script is here:
+
+bowtie_rRNA_align.sh
+
+To get reports, this is now the official script. It imports other scripts "reports_2015.R” and "compile_qc_stats_2015.sh”. 
+
+I probably made it a bit overly complicated to account for all the different possibilities. I’ve listed here a few examples for basic things you might want/need to do.
+
+make_html_2015.sh
+
+Getting a basic EastRiver report, including flagging samples by quality, for human mRNA:
+
+make_html_2015.sh -l 125 -f TRUE -p mRNA -e TRUE -r Results_Apr15 -s samples.txt -o human
+
+For mouse totalRNA:
+
+make_html_2015.sh -l 125 -f TRUE -p totalRNA -e TRUE -r Results_Apr15 -s samples.txt -o mouse
+
+If we do not want to flag samples:
+
+make_html_2015.sh -l 125 -f FALSE -e TRUE -r Results_Apr15 -s samples.txt -o human
+
+For outside EastRiver:
+
+make_html_2015.sh -l 125 -f FALSE -e FALSE -r Results_Apr15 -s samples.txt -o human
+
+For PDX:
+
+make_html_2015.sh -l 125 -f FALSE -e FALSE -r Results_Apr15 -s samples.txt -o human -x TRUE
+
+One major thing that came up a lot recently was when project management wanted to compare samples found in different project directories. The best way to do this is to make a fresh directory, then copy the QC files for those samples into it using one of the following scripts. 
+
+For EastRiver output: copy_files_from_EastRiver_to_outside_ER_format.sh /data/analysis/InvestigatorA/Project_INV_123_RNA/Sample_X
+For outside EastRiver output: copy_files.sh /data/analysis/InvestigatorA/Project_INV_123_RNA/Sample_X
+
+Then you can generate reports like so.
+
+make_html_2015.sh -l read_length(Can just use 100 if read lengths are different between samples) -f FALSE -e FALSE -r Results_date -o human/mouse
+
+Finally, hopefully this won’t come up when I’m not around, but occasionally we’ll need to set up a QC page where we look at the data based on groups (ie looking at clustering where we plot case vs. control in two different colors). The following scripts can be used to do this, but they require very specifically formatted input.
+
+plot_reports_by_group_after_normal_script.sh
+plot_reports_by_group_after_normal_script.R
