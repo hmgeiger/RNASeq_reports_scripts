@@ -76,8 +76,9 @@ ggplot(myPCAobject,aes(PC1,PC2,color=condition,shape=batch)) + geom_point();
 Add the percent of the variance explained by each principal component to the plot as part of the axis labels.
 Use the paste0 function to paste the labels to the percentages from the percentVar vector.
 
-```myxlab = paste0("PC1:",percentVar[1],"% variance");
-myylab = paste0("PC2:",percentVar[2],"% variance");
+```
+myxlab=paste0("PC1:",percentVar[1],"% variance")
+myylab=paste0("PC2:",percentVar[2],"% variance")
 ```
 
 Add these to the plot using the functions xlab and ylab from ggplot2.
@@ -92,7 +93,7 @@ Run DESeq on the DESeq object to get it ready to run differential expression.
 ```myDiffExpObject = DESeq(myDESeqObject)```
 
 Use DESeq2's results function to get an object with a differential expression results table inside.
-In this example, the variable we are interested in is called "condition", and we want to look at the expression of condition A versus B.
+In this example, the variable we are interested in is called "condition", and we want to look at the expression of A versus B.
 Look at the design matrix to see which groups to compare here.
 
 ```myresults = results(myDiffExpObject,contrast=c("condition","A","B"))```
@@ -115,7 +116,8 @@ Let's try using either the regular normalized counts or the rlogTransformation c
 
 First, we need to get the actual counts from the rlogTransformation object.
 
-```rlogMatrix = assay(rlogObject)
+```
+rlogMatrix = assay(rlogObject)
 colnames(rlogMatrix) = colnames(raw.counts)
 ```
 
