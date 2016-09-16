@@ -69,15 +69,15 @@ The function ggplot in the library ggplot2 is great for this.
 
 Here is an example coloring by condition, putting shape by batch.
 
-```library(ggplot2)
-ggplot(myPCAobject,aes(PC1,PC2,color=condition,shape=batch)) + geom_point()
+```library(ggplot2);
+ggplot(myPCAobject,aes(PC1,PC2,color=condition,shape=batch)) + geom_point();
 ```
 
 Add the percent of the variance explained by each principal component to the plot as part of the axis labels.
 Use the paste0 function to paste the labels to the percentages from the percentVar vector.
 
-```myxlab = paste0("PC1:",percentVar[1],"% variance")
-myylab = paste0("PC2:",percentVar[2],"% variance")
+```myxlab = paste0("PC1:",percentVar[1],"% variance");
+myylab = paste0("PC2:",percentVar[2],"% variance");
 ```
 
 Add these to the plot using the functions xlab and ylab from ggplot2.
