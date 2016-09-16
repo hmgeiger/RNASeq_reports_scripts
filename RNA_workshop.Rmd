@@ -1,0 +1,133 @@
+Use the read.table function to read in the QC statistics table located at /gpfs/commons/groups/siw/data/RNA/Results/QC_statistics.txt.
+Hint: This file has a header.
+
+Which samples have the smallest and largest library size?
+What is the range of each statistic like (mapping rates, etc.)?
+
+Next read in the gene info file located at /gpfs/commons/groups/siw/data/RNA/Results/gene_annotation_info.txt.
+This file contains information for each gene ID like the genome location, whether it is coding or noncoding, and the corresponding gene name (so you can get, e.g., TP53 instead of ENSG00000141510.11).
+Hint: This file has a header and is tab-delimited.
+
+What is the gene name for the gene ID ENSG00000104055.10?
+
+Read in the gene counts matrix located at /gpfs/commons/groups/siw/data/RNA/Results/featureCounts_count_matrix.txt.
+Hint: This file has a header and column names that contain non-standard characters.
+Make the row names of this matrix be the gene IDs.
+Save to an object "raw.counts".
+
+Read in the file outlining the study design located at /gpfs/commons/groups/siw/data/RNA/Results/design.txt.
+Hint: This file has a header.
+
+Make a DESeq object with the counts and design information.
+First, need to load the library.
+
+```{r} library(DESeq2) ```
+
+Next, use the function DESeqDataSetFromMatrix to make the object. Here is the basic syntax for this command:
+
+```{r} myDESeqObject = DESeqDataSetFromMatrix(countData = mycounts,colData=my_design_matrix,design=~mydesign)```
+
+For the design, we want to measure the effect of treatment group (treated versus untreated), controlling for the cell line differences.
+This is a treatment group + cell line design.
+Use the column names of your design matrix to set the design.
+
+From this object, let's make a matrix of counts normalized by library size.
+DESeq2's estimateSizeFactors function adds normalization factors based on library size to the DESeq object.
+
+```{r} myDESeqObject = estimateSizeFactors(myDESeqObject)```
+
+To get the normalized counts from this object, use DESeq2's function counts with the option normalized=TRUE. 
+Save to an object "normalized.counts".
+
+By default, the column names of normalized.counts will just be 1,2,3, etc.
+Switch these to our sample names.
+
+```{r} colnames(normalized.counts) = colnames(raw.counts)```
+
+Let's run two other normalization methods: rlogTransformation and varianceStabilizingTransformation.
+Besides putting the counts into log2 format and normalizing for library size, these methods also minimize the effects of variation in very lowly expressed genes.
+Run both functions on the DESeq object you made.
+Use the argument blind=TRUE so that it does not consider the experimental design in its normalization.
+
+Run DESeq2's plotPCA function on the rlogTransformation object, which will save principal components and the design data into an object.
+
+Here is the basic syntax for this command.
+This example is for a project where we want to look at condition, controlling for batch.
+
+```{r} myPCAobject = plotPCA(rlogObject,intgroup = c("condition","batch"),returnData=TRUE)```
+
+Get the proportion of the variance attributable to each principal component.
+You can access this using the attr function to get percentVar from the PCA object.
+
+```{r} percentVar = attr(myPCAobject,"percentVar")```
+
+These will be fractions rather than percents, and not rounded.
+Switch them to percents (multiply by 100), and round to the nearest whole number using the round function.
+
+Plot the principal components colored by treated versus untreated, shape by cell line.
+The function ggplot in the library ggplot2 is great for this.
+
+Here is an example coloring by condition, putting shape by batch.
+
+```{r} library(ggplot2)
+ggplot(myPCAobject,aes(PC1,PC2,color=condition,shape=batch)) + geom_point()
+```
+
+Add the percent of the variance explained by each principal component to the plot as part of the axis labels.
+Use the paste0 function to paste the labels to the percentages from the percentVar vector.
+
+```{r} myxlab = paste0("PC1:",percentVar[1],"% variance")
+myylab = paste0("PC2:",percentVar[2],"% variance")
+```
+
+Add these to the plot using the functions xlab and ylab from ggplot2.
+Continuing with the example:
+
+```{r} ggplot(myPCAobject,aes(PC1,PC2,color=condition,shape=batch)) + geom_point() + xlab(myxlab) + ylab(myylab)```
+
+Next, let's run differential expression using DESeq2.
+
+Run DESeq on the DESeq object to get it ready to run differential expression.
+
+```{r} myDiffExpObject = DESeq(myDESeqObject)```
+
+Use DESeq2's results function to get an object with a differential expression results table inside.
+In this example, the variable we are interested in is called "condition", and we want to look at the expression of condition A versus B.
+Look at the design matrix to see which groups to compare here.
+
+```{r} myresults = results(myDiffExpObject,contrast=c("condition","A","B"))```
+
+This object is not a data frame, but a special type of object.
+To make it easier to work with the results later on, also save it as a data frame.
+
+```{r} myresults.data.frame = as.data.frame(myresults)```
+
+Get the indices of genes differentially expressed with a false discovery rate of less than 1%.
+Hint: Use the adjusted p-value, not the raw p-value.
+Another hint: Use the which function, and the results data frame (myresults.data.frame).
+
+Name the vector with these indices "significantly.DE.gene.indices".
+
+How many differentially expressed genes are there?
+
+Finally, use the pheatmap function to make a heatmap of expression for the differentially expressed genes.
+Let's try using either the regular normalized counts or the rlogTransformation counts.
+
+First, we need to get the actual counts from the rlogTransformation object.
+
+```{r} rlogMatrix = assay(rlogObject)
+colnames(rlogMatrix) = colnames(raw.counts)
+```
+
+Next, use the indices we obtained for the DEGs (significantly.DE.gene.indices) to get the appropriate genes from the normalized count matrix.
+Then run this in pheatmap.
+
+```{r} pheatmap(normalized.counts[significantly.DE.gene.indices,])
+pheatmap(rlogMatrix[significantly.DE.gene.indices,])
+```
+
+Doesn't look like we were hoping does it? Try adding the option scale="row".
+This way we will color by deviation from the mean within each gene.
+
+Much nicer right? 
+
